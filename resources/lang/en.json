@@ -2431,6 +2431,12 @@
     "Please write checklist name!": "Please write checklist name!",
     "Please write comment!": "Please write comment!",
     "Please write todo title!": "Please write todo title!",
+
+    "SCM System": "SCM System",
+    
+
+
+
     "POS": "POS",
     "POS Amount": "POS Amount",
     "POS Barcode Print": "POS Barcode Print",
@@ -3616,6 +3622,7 @@
     "Select task stage": "Select task stage",
     "Shared project settings": "Shared project settings",
     "Task name": "Task name",
+    "Inventory Management": "Inventory ",
     "The bill field is required.": "The bill field is required.",
     "The credit note has been created for this invoice, so it cannot be deleted.": "The credit note has been created for this invoice, so it cannot be deleted.",
     "The debit note has been created for this bill, so it cannot be deleted.": "The debit note has been created for this bill, so it cannot be deleted.",
@@ -3624,4 +3631,7 @@
     "This payment name already exists.": "This payment name already exists.",
     "You cannot file a complaint against yourself.": "You cannot file a complaint against yourself.",
     "You cannot transfer more than the available balance in the from account.": "You cannot transfer more than the available balance in the from account."
+    
+
+
 }
