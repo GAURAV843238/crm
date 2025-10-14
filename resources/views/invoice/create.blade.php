@@ -450,7 +450,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                               <!--  <div class="col-md-6">
                                     <div class="form-group">
                                         {{ Form::label('ref_number', __('Ref Number'),['class'=>'form-label']) }}
                                         <div class="form-icon-user">
@@ -458,7 +458,26 @@
                                             {{ Form::text('ref_number', '', array('class' => 'form-control' , 'placeholder'=>__('Enter Ref NUmber'))) }}
                                         </div>
                                     </div>
-                                </div>
+                                </div> -->
+
+                               <div class="col-md-12">
+    <div class="form-group">
+        {{ Form::label('order_source', __('Order Source'), ['class' => 'form-label']) }}
+        <div class="form-icon-user">
+            <span><i class="ti ti-joint"></i></span>
+            {{ Form::select('order_source', [
+                'POS' => 'POS (In-Store Sale)',
+                'Online' => 'Online Store',
+                'B2B' => 'Wholesale / B2B Client',
+                'Marketplace' => 'Marketplace (Amazon / Flipkart)',
+                'Manual' => 'Manual / Phone Order',
+                'MobileApp' => 'Mobile App',
+                'Distributor' => 'Distributor / Partner Portal',
+            ], null, ['class' => 'form-control', 'placeholder' => __('Select Order Source')]) }}
+        </div>
+    </div>
+</div>
+
                                 @if(!$customFields->isEmpty())
                                             @include('customFields.formBuilder')
                                 @endif
