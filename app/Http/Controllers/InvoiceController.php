@@ -64,8 +64,8 @@ class InvoiceController extends Controller
     }
 
     public function create($customerId = 0)
-    {
-        if (\Auth::user()->can('create invoice')) {
+    { 
+        if (\Auth::user()->can('create invoice')) { 
             $customFields = CustomField::where('created_by', '=', \Auth::user()->creatorId())->where('module', '=', 'invoice')->get();
             $invoice_number = \Auth::user()->invoiceNumberFormat($this->invoiceNumber());
             $customers = Customer::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
@@ -121,6 +121,7 @@ class InvoiceController extends Controller
             $invoice = new Invoice();
             $invoice->invoice_id = $this->invoiceNumber();
             $invoice->customer_id = $request->customer_id;
+            $invoice->source = $request->source;
             $invoice->status = 0;
             $invoice->issue_date = $request->issue_date;
             $invoice->due_date = $request->due_date;

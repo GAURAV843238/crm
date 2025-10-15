@@ -415,6 +415,26 @@
                         </div>
                         <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
                             <div class="row">
+
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        {{ Form::label('order_source', __('Order Source'), ['class' => 'form-label']) }}
+                                        <div class="form-icon-user">
+                                            <span><i class="ti ti-joint"></i></span>
+                                            {{ Form::select('source', [
+                                            'POS (In-Store Sale)' => 'POS (In-Store Sale)',
+                                            'Online Store' => 'Online Store',
+                                            'Wholesale / B2B Client' => 'Wholesale / B2B Client',
+                                            'Marketplace (Amazon / Flipkart)' => 'Marketplace (Amazon / Flipkart)',
+                                            'Manual / Phone Order' => 'Manual / Phone Order',
+                                            'Mobile App' => 'Mobile App',
+                                            'Distributor / Partner Portal' => 'Distributor / Partner Portal',
+                                            ], null, ['class' => 'form-control', 'placeholder' => __('Select Order Source')]) }}
+                                        </div>
+                                    </div>
+                                </div>
+
+
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         {{ Form::label('issue_date', __('Issue Date'),['class'=>'form-label']) }}<x-required></x-required>
@@ -460,23 +480,7 @@
                                     </div>
                                 </div> -->
 
-                               <div class="col-md-12">
-    <div class="form-group">
-        {{ Form::label('order_source', __('Order Source'), ['class' => 'form-label']) }}
-        <div class="form-icon-user">
-            <span><i class="ti ti-joint"></i></span>
-            {{ Form::select('order_source', [
-                'POS' => 'POS (In-Store Sale)',
-                'Online' => 'Online Store',
-                'B2B' => 'Wholesale / B2B Client',
-                'Marketplace' => 'Marketplace (Amazon / Flipkart)',
-                'Manual' => 'Manual / Phone Order',
-                'MobileApp' => 'Mobile App',
-                'Distributor' => 'Distributor / Partner Portal',
-            ], null, ['class' => 'form-control', 'placeholder' => __('Select Order Source')]) }}
-        </div>
-    </div>
-</div>
+
 
                                 @if(!$customFields->isEmpty())
                                             @include('customFields.formBuilder')

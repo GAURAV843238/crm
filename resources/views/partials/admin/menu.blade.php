@@ -213,12 +213,7 @@
                                             href="{{ route('budget.index') }}">{{ __('Budget Planner') }}</a>
                                     </li>
                                 @endif
-                                @if (Gate::check('manage goal'))
-                                    <li class="dash-item {{ Request::segment(1) == 'goal' ? 'active' : '' }}">
-                                        <a class="dash-link"
-                                            href="{{ route('goal.index') }}">{{ __('Financial Goal') }}</a>
-                                    </li>
-                                @endif
+                               
                                 @if (Gate::check('manage constant tax') ||
                                         Gate::check('manage constant category') ||
                                         Gate::check('manage constant unit') ||
@@ -465,6 +460,7 @@
                                 @endcan
                 </ul>
             </li>
+
  <!---------------------end warehouse System ----------------------------------->
 
                                @if (Gate::check('manage customer') ||
@@ -503,7 +499,12 @@
                                         </ul>
                                     </li>
                                 @endif
-                      
+                                 @if (Gate::check('manage goal'))
+                                    <li class="dash-item {{ Request::segment(1) == 'goal' ? 'active' : '' }}">
+                                        <a class="dash-link"
+                                            href="{{ route('goal.index') }}">{{ __('Production & Planning') }}</a>
+                                    </li>
+                                @endif
                             </ul>
                         </li>
                     @endif

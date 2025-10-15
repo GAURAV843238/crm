@@ -504,6 +504,14 @@
                                     </small>
                                 </div>
 
+                                <div class="col">
+                                    {{ __('Source') }} :  {{ $invoice->source }}
+                                </div>
+                                 <div class="col">
+                                 
+                                </div>
+
+
                                 @if (!empty($customFields) && count($invoice->customField) > 0)
                                     @foreach ($customFields as $field)
                                         <div class="col text-md-right">
