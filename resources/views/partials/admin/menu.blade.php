@@ -418,6 +418,11 @@
                                         class="dash-link">{{ __('Product Stock') }}
                                     </a>
                                 </li>
+                                <li class="dash-item {{ Request::segment(1) == 'productstock' ? 'active' : '' }}">
+                                    <a href="{{ route('productstock.index') }}"
+                                        class="dash-link">{{ __('Multi-Location Tracking') }}
+                                    </a>
+                                </li>
 
                             @endif
                         </ul>
@@ -487,24 +492,37 @@
                                                         href="{{ route('customer.index') }}">{{ __('Customer') }}</a>
                                                 </li>
                                             @endif
-                                            <!-- @if (Gate::check('manage proposal'))
+                                        
                                                 <li
                                                     class="dash-item {{ Request::segment(1) == 'proposal' ? 'active' : '' }}">
                                                     <a class="dash-link"
-                                                        href="{{ route('proposal.index') }}">{{ __('Estimate') }}</a>
+                                                        href="{{ route('proposal.index') }}">{{ __('Multi-Location Tracking') }}</a>
                                                 </li>
-                                            @endif
-                                            -->
+                                            
+                                            
                                           
                                         </ul>
                                     </li>
                                 @endif
-                                 @if (Gate::check('manage goal'))
-                                    <li class="dash-item {{ Request::segment(1) == 'goal' ? 'active' : '' }}">
+                                 <li class="dash-item {{ Request::segment(1) == 'goal' ? 'active' : '' }}">
                                         <a class="dash-link"
                                             href="{{ route('goal.index') }}">{{ __('Production & Planning') }}</a>
                                     </li>
-                                @endif
+
+                                     <li class="dash-item {{ Request::segment(1) == 'goal' ? 'active' : '' }}">
+                                        <a class="dash-link"
+                                            href="{{ route('goal.index') }}">{{ __('Vehicle Management') }}</a>
+                                    </li>
+
+                                     <li class="dash-item {{ Request::segment(1) == 'goal' ? 'active' : '' }}">
+                                        <a class="dash-link"
+                                            href="{{ route('goal.index') }}">{{ __('Returns and Reverse') }}</a>
+                                    </li>
+                                    <li
+                                        class="dash-item {{ Request::route()->getName() == 'pos-print-setting' ? ' active' : '' }}">
+                                        <a class="dash-link"
+                                            href="{{ route('pos.print.setting') }}">{{ __('Invoice Setting') }}</a>
+                                    </li>
                             </ul>
                         </li>
                     @endif

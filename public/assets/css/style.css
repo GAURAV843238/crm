@@ -18036,7 +18036,7 @@ body.theme-10 .card .card-header h5:after, body.theme-10 .card .card-header .h5:
 .dash-sidebar {
     background: #1c232f;
     box-shadow: 0 1px 20px 0 rgba(69, 90, 100, 0.08);
-    width: 290px;
+    width: 300px;
     position: fixed;
     top: 0;
     bottom: 0;
@@ -18915,7 +18915,7 @@ body:not(.minimenu) .dash-sidebar .dash-submenu .dash-submenu .dash-submenu > .d
 .dash-container {
     position: relative;
     top: 70px;
-    margin-left: 255px;
+    margin-left: 290px;
     min-height: calc(100vh - 70px);
 }
 
