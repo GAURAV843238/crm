@@ -21,6 +21,12 @@ use App\Models\Utility;
 use App\Models\Vender;
 use App\Traits\updateNotesStatus;
 use Illuminate\Http\Request;
+use App\Models\WarehouseProduct;
+use App\Models\WarehouseTransfer;
+use App\Models\warehouse;
+use App\Models\Purchase;
+use App\Models\PurchaseProduct;
+
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -91,141 +97,160 @@ class BillController extends Controller
             $venders     = Vender::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
             $venders->prepend('Select Vender', '');
 
+            $warehouse     = warehouse::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $warehouse->prepend('Select Warehouse', '');
+
             $product_services = ProductService::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
             $product_services->prepend('Select Item', '');
 
-            return view('bill.create', compact('venders', 'bill_number', 'product_services', 'category', 'customFields', 'vendorId'));
+            return view('bill.create', compact('venders', 'bill_number', 'product_services', 'category', 'customFields', 'vendorId','warehouse'));
         }
         else
         {
             return response()->json(['error' => __('Permission denied.')], 401);
         }
     }
+    
+function purchaseNumber()
+    {
+        $latest = Purchase::where('created_by', '=', \Auth::user()->creatorId())->latest('purchase_id')->first();
+        if(!$latest)
+        {
+            return 1;
+        }
 
+        return $latest->purchase_id + 1;
+    }
 
     public function store(Request $request)
-    {
+{
+    if (!\Auth::user()->can('create bill')) {
+        return redirect()->back()->with('error', __('Permission denied.'));
+    }
 
-        if(\Auth::user()->can('create bill'))
-        {
+    // Validation
+    $validator = \Validator::make($request->all(), [
+        'vender_id'   => 'required',
+        'bill_date'   => 'required',
+        'due_date'    => 'required',
+        'category_id' => 'required',
+    ]);
 
-            $validator = \Validator::make(
-                $request->all(), [
-                    'vender_id' => 'required',
-                    'bill_date' => 'required',
-                    'due_date' => 'required',
-                    'category_id' => 'required'
-                ]
-            );
-            if ($validator->fails()) {
-                $messages3 = $validator->getMessageBag();
-                return redirect()->back()->with('error', $messages3->first());
-            }
+    if ($validator->fails()) {
+        return redirect()->back()->with('error', $validator->getMessageBag()->first());
+    }
 
-            $bill            = new Bill();
-            $bill->bill_id   = $this->billNumber();
-            $bill->vender_id = $request->vender_id;;
-            $bill->bill_date      = $request->bill_date;
-            $bill->status         = 0;
-            $bill->type         =  'Bill';
-            $bill->user_type         =  'vendor';
-            $bill->due_date       = $request->due_date;
-            $bill->category_id    = !empty($request->category_id) ? $request->category_id :0;
-            $bill->order_number   = !empty($request->order_number) ? $request->order_number : 0;
-            $bill->created_by     = \Auth::user()->creatorId();
-            $bill->save();
+    // Create Bill
+    $bill = new Bill();
+    $bill->bill_id       = $this->billNumber();
+    $bill->vender_id     = $request->vender_id;
+    $bill->bill_date     = $request->bill_date;
+    $bill->due_date      = $request->due_date;
+    $bill->status        = 0;
+    $bill->type          = 'Bill';
+    $bill->user_type     = 'vendor';
+    $bill->category_id   = !empty($request->category_id) ? $request->category_id : 0;
+    $bill->order_number  = !empty($request->order_number) ? $request->order_number : 0;
+    $bill->created_by    = \Auth::user()->creatorId();
+    $bill->save();
 
-            CustomField::saveData($bill, $request->customField);
-            $products = $request->items;
+    // Custom fields
+    CustomField::saveData($bill, $request->customField ?? []);
 
-            $total_amount=0;
+    $products = $request->items;
+    $total_amount = 0;
 
-            for($i = 0; $i < count($products); $i++)
-            {
-                if(!empty($products[$i]['item']))
-                {
-                    $billProduct              = new BillProduct();
-                    $billProduct->bill_id     = $bill->id;
-                    $billProduct->product_id  = $products[$i]['item'];
-                    $billProduct->quantity    = $products[$i]['quantity'];
-                    $billProduct->tax         = $products[$i]['tax'];
-                    $billProduct->discount    = $products[$i]['discount'];
-                    $billProduct->price       = $products[$i]['price'];
-                    $billProduct->description = $products[$i]['description'];
-                    $billProduct->save();
-                }
+    // Save Bill Products
+    foreach ($products as $product) {
+        if (!empty($product['item'])) {
+            $billProduct = new BillProduct();
+            $billProduct->bill_id     = $bill->id;
+            $billProduct->product_id  = $product['item'];
+            $billProduct->quantity    = $product['quantity'];
+            $billProduct->tax         = $product['tax'];
+            $billProduct->discount    = $product['discount'];
+            $billProduct->price       = $product['price'];
+            $billProduct->description = $product['description'];
+            $billProduct->save();
 
-                //inventory management (Quantity)
-                if(!empty($billProduct))
-                {
-                    Utility::total_quantity('plus',$billProduct->quantity,$billProduct->product_id);
-                }
+            // Inventory Management
+            Utility::total_quantity('plus', $billProduct->quantity, $billProduct->product_id);
 
-                //Product Stock Report
-                if(!empty($products[$i]['item']))
-                {
-                    $type='bill';
-                    $type_id = $bill->id;
-                    $description=$products[$i]['quantity'].'  '.__('quantity purchase in bill').' '. \Auth::user()->billNumberFormat($bill->bill_id);
-                    Utility::addProductStock( $products[$i]['item'],$products[$i]['quantity'],$type,$description,$type_id);
-                    $total_amount += ((float)$billProduct->quantity * (float)$billProduct->price);
-                }
-            }
+            // Product Stock Report
+            $type = 'bill';
+            $type_id = $bill->id;
+            $description = $billProduct->quantity . ' ' . __('quantity purchase in bill') . ' ' . \Auth::user()->billNumberFormat($bill->bill_id);
+            Utility::addProductStock($billProduct->product_id, $billProduct->quantity, $type, $description, $type_id);
 
-
-            //For Notification
-            $setting  = Utility::settings(\Auth::user()->creatorId());
-            $vendor = Vender::find($request->vender_id);
-            $billNotificationArr = [
-                'bill_number' => \Auth::user()->billNumberFormat($bill->bill_id),
-                'user_name' => \Auth::user()->name,
-                'bill_date' => $bill->bill_date,
-                'bill_due_date' => $bill->due_date,
-                'vendor_name' => $vendor->name,
-            ];
-            //Slack Notification
-            if(isset($setting['bill_notification']) && $setting['bill_notification'] ==1)
-            {
-                Utility::send_slack_msg('new_bill', $billNotificationArr);
-            }
-            //Telegram Notification
-            if(isset($setting['telegram_bill_notification']) && $setting['telegram_bill_notification'] ==1)
-            {
-                Utility::send_telegram_msg('new_bill', $billNotificationArr);
-            }
-            //Twilio Notification
-            if(isset($setting['twilio_bill_notification']) && $setting['twilio_bill_notification'] ==1)
-            {
-                Utility::send_twilio_msg($vendor->contact,'new_bill', $billNotificationArr);
-            }
-
-
-            //webhook
-            $module ='New Bill';
-            $webhook =  Utility::webhookSetting($module);
-            if($webhook)
-            {
-                $parameter = json_encode($bill);
-                $status = Utility::WebhookCall($webhook['url'],$parameter,$webhook['method']);
-
-                if($status == true)
-                {
-                    return redirect()->route('bill.index', $bill->id)->with('success', __('Bill successfully created.'));
-                }
-                else
-                {
-                    return redirect()->back()->with('error', __('Bill successfully created, Webhook call failed.'));
-                }
-            }
-
-
-            return redirect()->route('bill.index', $bill->id)->with('success', __('Bill successfully created.'));
-        }
-        else
-        {
-            return redirect()->back()->with('error', __('Permission denied.'));
+            $total_amount += ($billProduct->quantity * $billProduct->price);
         }
     }
+
+    // Automatically create Purchase + WarehouseStock if warehouse_id selected
+    if (!empty($request->warehouse_id) && !empty($products)) {
+        $purchase = new Purchase();
+        $purchase->purchase_id   = $this->purchaseNumber();
+        $purchase->vender_id     = $request->vender_id;
+        $purchase->warehouse_id  = $request->warehouse_id;
+        $purchase->purchase_date = $bill->bill_date;
+        $purchase->status        = 0;
+        $purchase->category_id   = $request->category_id;
+        $purchase->created_by    = \Auth::user()->creatorId();
+        $purchase->save();
+
+        foreach ($products as $product) {
+            if (!empty($product['item'])) {
+                $purchaseProduct = new PurchaseProduct();
+                $purchaseProduct->purchase_id = $purchase->id;
+                $purchaseProduct->product_id  = $product['item'];
+                $purchaseProduct->quantity    = $product['quantity'];
+                $purchaseProduct->tax         = $product['tax'];
+                $purchaseProduct->discount    = $product['discount'];
+                $purchaseProduct->price       = $product['price'];
+                $purchaseProduct->description = $product['description'];
+                $purchaseProduct->save();
+
+                // Update warehouse stock
+                Utility::addWarehouseStock($product['item'], $product['quantity'], $request->warehouse_id);
+            }
+        }
+    }
+
+    // Notifications
+    $setting = Utility::settings(\Auth::user()->creatorId());
+    $vendor  = Vender::find($request->vender_id);
+    $billNotificationArr = [
+        'bill_number'    => \Auth::user()->billNumberFormat($bill->bill_id),
+        'user_name'      => \Auth::user()->name,
+        'bill_date'      => $bill->bill_date,
+        'bill_due_date'  => $bill->due_date,
+        'vendor_name'    => $vendor->name,
+    ];
+
+    if (!empty($setting['bill_notification'])) {
+        Utility::send_slack_msg('new_bill', $billNotificationArr);
+    }
+    if (!empty($setting['telegram_bill_notification'])) {
+        Utility::send_telegram_msg('new_bill', $billNotificationArr);
+    }
+    if (!empty($setting['twilio_bill_notification'])) {
+        Utility::send_twilio_msg($vendor->contact, 'new_bill', $billNotificationArr);
+    }
+
+    // Webhook
+    $module = 'New Bill';
+    $webhook = Utility::webhookSetting($module);
+    if ($webhook) {
+        $parameter = json_encode($bill);
+        $status = Utility::WebhookCall($webhook['url'], $parameter, $webhook['method']);
+        if (!$status) {
+            return redirect()->back()->with('error', __('Bill successfully created, Webhook call failed.'));
+        }
+    }
+
+    return redirect()->route('bill.index', $bill->id)->with('success', __('Bill successfully created.'));
+}
+
 
     public function show($ids)
     {

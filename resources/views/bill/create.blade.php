@@ -567,11 +567,27 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
+                                <div class="col-md-12">
+                                   <!--  <div class="form-group">
                                         {{ Form::label('order_number', __('Order Number'),['class'=>'form-label']) }}
                                         {{ Form::number('order_number', '', array('class' => 'form-control' , 'placeholder'=>__('Enter Order Number'))) }}
+                                    </div> -->
+                                    <div class="form-group">
+                                        {{ Form::label('warehouse_id', __('Warehouse'), ['class'=>'form-label']) }}
+                                        {{ Form::select('warehouse_id', $warehouse, null, ['class' => 'form-control select']) }}
+
+                                        <div class="text-xs mt-1">
+                                            {{ __('Create warehouse here.') }} 
+                                            <a href="{{ route('warehouse.index') }}"><b>{{ __('Create warehouse') }}</b></a>
+                                        </div>
+
+                                        {{-- Red warning if warehouse not selected --}}
+                                        <span style="color: red; font-size: 0.85rem;">
+                                            {{ __('If you want to add items in the warehouse, please select a warehouse first.') }}
+                                        </span>
                                     </div>
+
+
                                 </div>
                                 @if(!$customFields->isEmpty())
                                             @include('customFields.formBuilder')
